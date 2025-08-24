@@ -1,61 +1,147 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel CRUD Cheat Sheet
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 1️⃣ Routes & Controllers
 
-## About Laravel
+-   Create resource controller: `php artisan make:controller PostController --resource`
+-   Register resource routes: `Route::resource('posts', PostController::class);`
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Resource routes generated:**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Verb      | URI              | Action           | Controller Method |
+| --------- | ---------------- | ---------------- | ----------------- |
+| GET       | /posts           | List all posts   | index()           |
+| GET       | /posts/create    | Show form        | create()          |
+| POST      | /posts           | Save new post    | store()           |
+| GET       | /posts/{id}      | Show single post | show()            |
+| GET       | /posts/{id}/edit | Edit form        | edit()            |
+| PUT/PATCH | /posts/{id}      | Update post      | update()          |
+| DELETE    | /posts/{id}      | Delete post      | destroy()         |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 2️⃣ Eloquent Model Basics
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```php
+class Post extends Model
+{
+    protected $fillable = ['title', 'content'];
+}
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+-   `$fillable` allows mass assignment.
+-   `Post::query()` starts a query builder.
+-   `Post::all()` fetches all records.
+-   `Post::find($id)` fetches a single record by primary key.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Common Eloquent Queries
 
-## Laravel Sponsors
+```php
+// Get all posts
+$posts = Post::all();
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+// Get posts with condition
+$posts = Post::where('title', 'like', '%Laravel%')->get();
 
-### Premium Partners
+// Order posts
+$posts = Post::orderBy('created_at', 'desc')->get();
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+// Limit
+$posts = Post::limit(10)->get();
 
-## Contributing
+// Paginate
+$posts = Post::paginate(5);
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+// Select specific columns
+$posts = Post::select('id', 'title')->get();
+```
 
-## Code of Conduct
+### Create / Update / Delete
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```php
+// Create new post
+Post::create(['title' => 'New', 'content' => 'Body']);
 
-## Security Vulnerabilities
+// Update
+$post->update(['title' => 'Updated']);
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+// Delete
+$post->delete();
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 3️⃣ Blade Syntax
+
+```blade
+<!-- Display variable -->
+{{ $post->title }}
+
+<!-- Loop -->
+@foreach($posts as $post)
+    {{ $post->title }}
+@endforeach
+
+<!-- Validation error for a field -->
+@error('title')
+    <div style="color:red;">{{ $message }}</div>
+@enderror
+```
+
+-   `{{ old('field') }}` repopulates form input on validation failure.
+
+---
+
+## 4️⃣ Forms
+
+```blade
+<form action="/posts" method="POST">
+    @csrf
+    <input type="text" name="title" value="{{ old('title') }}">
+    <textarea name="content">{{ old('content') }}</textarea>
+    <button type="submit">Save</button>
+</form>
+```
+
+-   `@csrf` protects against Cross-Site Request Forgery.
+-   Form `action` + `method="POST"` maps to `store()`.
+
+---
+
+## 5️⃣ Validation (Controller)
+
+```php
+$validated = $request->validate([
+    'title' => 'required|string|max:255',
+    'content' => 'required|string',
+]);
+```
+
+-   Use `required` for mandatory fields.
+-   Use `nullable` for optional fields.
+
+---
+
+## 6️⃣ Debugging Tools
+
+-   `dd($var)` → Dump and die.
+-   `dump($var)` → Dump without stopping.
+-   `Log::info('message', [...])` → Write to storage/logs/laravel.log.
+-   Optional: Debugbar or Telescope packages.
+
+### Common Error Tip
+
+-   `Attempt to read property "title" on array` → you have an array instead of an Eloquent model. Use `$photo['title']` or fetch model correctly.
+
+---
+
+## 7️⃣ Quick Tips
+
+-   `::` → static method / constant (e.g., `Post::all()`).
+-   `->` → instance method or property (e.g., `$post->title`).
+-   Use `compact('variable')` to pass variables to Blade: `view('photos.index', compact('photos'))`.
+-   Always check if query returns Collection (loop) or single Model (access properties).
+-   Run `php artisan route:list` to see all routes and methods.
+
+---
+
+**This cheat sheet covers the essential Laravel CRUD workflow for your skills evaluation.**
