@@ -13,12 +13,8 @@ class PhotoController extends Controller
      */
     public function index()
     {
-        $query = Post::query();
-
-        
-
-        $photos = ["this", "is", "a", "test"];
-        return view("photos.index", compact('photos'));
+        $photos = Photo::latest()->paginate(5);
+        return view('photos.index', compact('photos'));
     }
 
     /**
@@ -26,7 +22,7 @@ class PhotoController extends Controller
      */
     public function create()
     {
-        //
+        return view('photos.create');
     }
 
     /**
@@ -34,13 +30,26 @@ class PhotoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'path' => 'required|image|max:2048',
+        ]);
+
+        // store the file and get the path string
+        $filePath = $request->file('path')->store('photos', 'public');
+
+        // replace the 'path' value in validated array with the stored path
+        $validated['path'] = $filePath;
+
+        Photo::create($validated);
+
+        return redirect()->route('photos.index');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Photo $photo)
     {
         //
     }
@@ -48,24 +57,38 @@ class PhotoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Photo $photo)
     {
-        //
+        return view('photos.edit', compact('photo'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Photo $photo)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'path' => 'nullable|image|max:2048', // use column name
+        ]);
+
+        if ($request->hasFile('path')) {
+            $filePath = $request->file('path')->store('photos', 'public');
+            $photo->path = $filePath; // save to correct column
+        }
+
+        $photo->title = $validated['title'];
+        $photo->save();
+
+        return redirect()->route('photos.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Photo $photo)
     {
-        //
+        $photo->delete();
+        return redirect()->route('photos.index');
     }
 }
