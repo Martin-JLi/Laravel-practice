@@ -12,8 +12,8 @@
         </p>
         <p>
             <label>Image:</label>
-            <input type="file" name="image">
-            <img src="{{ asset('storage/' . $photo->image) }}" width="100">
+            <input type="file" name="path">
+            <img src="{{ asset('storage/' . $photo->path) }}" width="100">
         </p>
         <button type="submit">Update</button>
     </form>

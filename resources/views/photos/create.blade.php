@@ -12,8 +12,8 @@
         </p>
         <p>
             <label>Image:</label>
-            <input type="file" name="image">
-            @error('image') <p>{{ $message }}</p> @enderror
+            <input type="file" name="path">
+            @error('path') <p>{{ $message }}</p> @enderror
         </p>
         <button type="submit">Save</button>
     </form>

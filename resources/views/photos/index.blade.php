@@ -11,7 +11,7 @@
     @foreach ($photos as $photo)
         <div>
             <h2>{{ $photo->title }}</h2>
-            <img src="{{ asset('storage/' . $photo->image) }}" width="150">
+            <img src="{{ asset('storage/' . $photo->path) }}" width="150">
             <a href="{{ route('photos.edit', $photo) }}">Edit</a>
             <form action="{{ route('photos.destroy', $photo) }}" method="POST">
                 @csrf
